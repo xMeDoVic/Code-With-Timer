@@ -1,0 +1,52 @@
+import cv2
+from qtpy.QtWidgets import QApplication, QLabel, QWidget
+from qtpy.QtGui import QImage, QPixmap
+from qtpy.QtCore import QTimer
+
+# Create a QApplication (the main window)
+app = QApplication([])
+window = QWidget()
+window.resize(640, 480)
+window.setStyleSheet("background-color: black;")
+
+# Create a QLabel to display the video
+label = QLabel(window)
+label.setGeometry(0, 0, 640, 400)
+
+# Start the video capture
+cap = cv2.VideoCapture(0)
+
+# Create a QTimer
+timer = QTimer()
+timer.setInterval(1000)  # Set the timer to run every 1 second
+time_remaining = 30
+
+# Create a QLabel to display the timer
+timer_label = QLabel(window)
+timer_label.setGeometry(0, 400, 300, 80)
+timer_label.setStyleSheet("background-color: black; color: white;")
+timer_label.show()
+
+def update_timer_label():
+    global time_remaining
+    time_remaining -= 1
+    if time_remaining >= 0:
+        timer_label.setText("Time remaining: {} seconds".format(time_remaining))
+    else:
+        timer_label.setText("Time's up!")
+        timer.stop()
+
+timer.timeout.connect(update_timer_label)
+timer.start()
+
+while True:
+    # Capture frame-by-frame
+    ret, frame = cap.read()
+    frame = cv2.cvtColor(frame, cv2.COLOR_BGR2RGB)
+    # Convert the frame to a QImage and set it as the pixmap of the QLabel
+    image = QImage(frame, frame.shape[1], frame.shape[0], QImage.Format_RGB888)
+    label.setPixmap(QPixmap.fromImage(image))
+    if not timer.isActive():
+        timer_label.setText("Time's up!")
+    app.processEvents()
+    window.show()
